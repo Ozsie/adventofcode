@@ -26,7 +26,6 @@ answerList.forEach { group ->
             }
         }
     }
-    println("$group ${map.filterValues { it > 0 }.filterValues { it+1==persons }}")
     count += map.filterValues { it > 0 }.filterValues { it+1==persons }.size
 }
 println(count)

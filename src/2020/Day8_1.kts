@@ -12,12 +12,7 @@ var accumulator = 0
 var index = 0
 while (index < instructions.size) {
     val i = instructions[index]
-    if (i.called) {
-        println("Terminate at: $index> $i")
-        println(accumulator)
-        System.exit(0)
-    }
-    i.called = true
+    if (i.called) break else i.called = true
 
     index = if (i.name == "jmp") {
         index + i.arg
@@ -26,3 +21,4 @@ while (index < instructions.size) {
         index + 1
     }
 }
+println(accumulator)

@@ -7,9 +7,8 @@ if [[ "$1" == all ]]; then
       TASK=$(cut -d'_' -f 2 <<<"${f}")
       TASK=${TASK:0:1}
       DAY=$(sed 's/_//g' <<<"${DAY}")
-      echo ${DAY}, Day ${DAY}, Task ${TASK}
       output=$(kscript ${f})
-      echo -e "Answer: \x1B[1;31m${output}\x1B[0m"
+      echo -e "${YEAR}, Day ${DAY}, Task ${TASK}> \x1B[1;31m${output}\x1B[0m"
     done
   done
 else
@@ -24,15 +23,13 @@ else
     DAY=${2}
   fi
   if [[ -z "$3" ]]; then
-    echo ${YEAR}, Day ${DAY}, Task 1
     output=$(kscript src/${YEAR}/Day${DAY}_1.kts)
-    echo -e "Answer: \x1B[1;31m${output}\x1B[0m"
-    echo ${YEAR}, Day ${DAY}, Task 2
+    echo -e "${YEAR}, Day ${DAY}, Task 1> \x1B[1;31m${output}\x1B[0m"
     output=$(kscript src/${YEAR}/Day${DAY}_2.kts)
-    echo -e "Answer: \x1B[1;31m${output}\x1B[0m"
+    echo -e "${YEAR}, Day ${DAY}, Task 2> \x1B[1;31m${output}\x1B[0m"
   else
     echo ${YEAR}, Day ${DAY}, Task ${3}
     output=$(kscript src/${YEAR}/Day${DAY}_${3}.kts)
-    echo -e "Answer: \x1B[1;31m${output}\x1B[0m"
+    echo -e "${YEAR}, Day ${DAY}, Task ${3}> \x1B[1;31m${output}\x1B[0m"
   fi
 fi

@@ -7,18 +7,16 @@ File("input/2020/day11").forEachLine { input.add(it.toCharArray()) }
 var previous = input
 var modified = copy(input)
 var runs = 0
-while (isChanged(previous,modified) || runs == 0) {
+while (isChanged(previous,modified) || (runs++) == 0) {
   previous = copy(modified)
   modified = ArrayList<CharArray>()
   for (y in IntRange(0,input.size-1)) {
-    val row = previous[y]
-    modified.add(CharArray(row.size))
-    for (x in IntRange(0,row.size-1)) {
+    modified.add(CharArray(previous[y].size))
+    for (x in IntRange(0,previous[y].size-1)) {
       val newState = if (modified[y][x] == '.') '.' else newState(x,y,previous[y][x],previous)
       modified[y].set(x,newState)
     }
   }
-  runs++
 }
 
 var occupied = 0
@@ -43,73 +41,62 @@ fun copy(o: ArrayList<CharArray>) = ArrayList<CharArray>().apply {
 }
 
 fun newState(x: Int, y: Int, seat: Char, input: ArrayList<CharArray>): Char {
-  var d = 0
-  for (aY in IntRange(y+1,input.lastIndex)) {
-    if (aY != y && input[aY][x] != '.' && d == 0) {
-      if (input[aY][x] == '#') d = 1 else break
-    }
-  }
+  var d = lookVert(x,y,input,IntRange(y+1,input.lastIndex))
+  var u = lookVert(x,y,input,y-1 downTo 0)
+  var dr = lookDown(x,y,input,IntRange(x+1,input[y].lastIndex))
+  var ur = lookUp(x,y,input,IntRange(x+1,input[y].lastIndex))
+  var dl = lookDown(x,y,input,x-1 downTo 0)
+  var ul = lookUp(x,y,input,x-1 downTo 0)
+  var r = lookHori(x,y,input,IntRange(x + 1, input[y].lastIndex))
+  var l = lookHori(x,y,input,x - 1 downTo 0)
 
-  var aY = y+1
-  var dr = 0
-  for (aX in IntRange(x+1,input[y].lastIndex)) {
-    if (aY == input.size) break
-    if (aY != y && aX != x && input[aY][aX] != '.' && dr == 0) {
-      if (input[aY][aX] == '#') dr = 1 else break
-    }
-    aY++
-  }
-
-  aY = y+1
-  var dl = 0
-  for (aX in x-1 downTo 0) {
-    if (aY == input.size) break
-    if (aY != y && aX != x && input[aY][aX] != '.' && dl == 0) {
-      if (input[aY][aX] == '#') dl = 1 else break
-    }
-    aY++
-  }
-
-  var u = 0
-  for (aY in y-1 downTo 0) {
-    if (aY != y && input[aY][x] != '.' && u == 0) {
-      if (input[aY][x] == '#') u = 1 else break
-    }
-  }
-
-  var ur = 0
-  aY = y-1
-  for (aX in IntRange(x+1,input[y].lastIndex)) {
-    if (aY < 0) break
-    if (aY != y && aX != x && input[aY][aX] != '.' && ur == 0) {
-      if (input[aY][aX] == '#') ur = 1 else break
-    }
-    aY--
-  }
-
-  var ul = 0
-  aY = y-1
-  for (aX in x-1 downTo 0) {
-    if (aY < 0) break
-    if (aY != y && aX != x && input[aY][aX] != '.' && ul == 0) {
-      if (input[aY][aX] == '#') ul = 1 else break
-    }
-    aY--
-  }
-
-  var r = 0
-  for (aX in IntRange(x + 1, input[y].lastIndex)) {
-    if (aX != x && input[y][aX] != '.' && r == 0) {
-      if (input[y][aX] == '#') r = 1 else break
-    }
-  }
-  var l = 0
-  for (aX in x - 1 downTo 0) {
-    if (aX != x && input[y][aX] != '.' && l == 0) {
-      if (input[y][aX] == '#') l = 1 else break
-    }
-  }
   var occupied = u + ur + ul + d + dr + dl + r + l
 
   return if (occupied == 0 && seat == 'L') '#' else if (occupied >= 5 && seat == '#') 'L' else seat
+}
+
+fun lookUp(x: Int, y: Int, input: ArrayList<CharArray>, range: IntProgression): Int {
+  var hit = 0
+  var aY = y-1
+  for (aX in range) {
+    if (aY < 0) break
+    if (aY != y && aX != x && input[aY][aX] != '.' && hit == 0) {
+      if (input[aY][aX] == '#') hit = 1 else break
+    }
+    aY--
+  }
+  return hit;
+}
+
+fun lookDown(x: Int, y: Int, input: ArrayList<CharArray>, range: IntProgression): Int {
+  var hit = 0
+  var aY = y+1
+  for (aX in range) {
+    if (aY == input.size) break
+    if (aY != y && aX != x && input[aY][aX] != '.' && hit == 0) {
+      if (input[aY][aX] == '#') hit = 1 else break
+    }
+    aY++
+  }
+  return hit;
+}
+
+fun lookVert(x: Int, y: Int, input: ArrayList<CharArray>, range: IntProgression): Int {
+  var hit = 0
+  for (aY in range) {
+    if (aY != y && input[aY][x] != '.' && hit == 0) {
+      if (input[aY][x] == '#') hit = 1 else break
+    }
+  }
+  return hit
+}
+
+fun lookHori(x: Int, y: Int, input: ArrayList<CharArray>, range: IntProgression): Int {
+  var hit = 0
+  for (aX in range) {
+    if (aX != x && input[y][aX] != '.' && hit == 0) {
+      if (input[y][aX] == '#') hit = 1 else break
+    }
+  }
+  return hit
 }

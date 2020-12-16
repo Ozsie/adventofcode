@@ -6,6 +6,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 data class Rule(val name: String, val lowerRange: IntRange, val upperRange: IntRange)
+fun Rule.matches(num: Int) = num in lowerRange || num in upperRange
 val f = File("input/2020/day16").readLines()
 val rules = ArrayList<Rule>()
 val ticket = ArrayList<Int>()
@@ -18,7 +19,6 @@ while (i < f.size) {
     when (line) {
         "your ticket:" -> {
             val x = f[i++]
-            println(x)
             val t = x.split(",").map { it.toInt() }
             ticket.addAll(t)
         }
@@ -38,16 +38,13 @@ while (i < f.size) {
     }
 }
 
+var sum = 0
 nearby.forEach { t ->
-    val notIn = rules.filter { rule ->
-        val matches = t.filter { v ->
-            !(v in rule.lowerRange) && !(v in rule.upperRange)
+    sum += t.filter { num ->
+        val matchingRules = rules.filter {
+            it.matches(num)
         }
-        println(matches)
-        notIn.isEmpty()
-    }
-    println(notIn)
+        matchingRules.isEmpty()
+    }.sum()
 }
-
-println(rules)
-println(ticket)
+println(sum)

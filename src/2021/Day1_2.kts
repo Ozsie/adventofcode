@@ -1,36 +1,35 @@
 import java.io.File
 
-var prev = Int.MAX_VALUE
-var increases = 0
-var index = 0
-val window = 3
 var windows = ArrayList<Int>()
 
+fun ArrayList<Int>.sum(index: Int, depth: Int): Int = getOrElse(index) {
+    add(0)
+    0
+} + depth
+
+fun ArrayList<Int>.updateIndex(index: Int, depth: Int) {
+    if (index >= 0) this[index] = sum(index, depth)
+}
+
+fun ArrayList<Int>.countIncreases(): Int {
+    var increases = 0
+    var prev = Int.MAX_VALUE
+    subList(0, size - 2).forEach { depth ->
+        if (depth > prev) increases++
+        prev = depth
+    }
+    return increases
+}
+
 File("input/2021/day1").apply {
+    var index = 0
     forEachLine { line ->
-        fun sum(index: Int, depth: Int): Int {
-            return windows.getOrElse(index) {
-                windows.add(0)
-                0
-            } + depth
-        }
         val depth = line.toInt()
-        val s1 = sum(index, depth)
-        windows[index] = s1
-        if (index - 1 >= 0) {
-            val s2 = sum(index - 1, depth)
-            windows[index-1] = s2
-        }
-        if (index - 2 >= 0) {
-            val s3 = sum(index - 2, depth)
-            windows[index-2] = s3
-        }
+        windows.updateIndex(index, depth)
+        windows.updateIndex(index - 1, depth)
+        windows.updateIndex(index - 2, depth)
         index++
     }
 }
-windows.subList(0, windows.size - 2).forEach { depth ->
-    if (depth > prev) increases++
-    prev = depth
-}
 
-println(increases)
+println(windows.countIncreases())

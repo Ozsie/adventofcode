@@ -1,62 +1,120 @@
 import java.io.File
+import kotlin.math.exp
 
-fun ArrayList<List<Int>>.expandOn(y: Int, x: Int, points: ArrayList<String>) {
-    val exists = basins.filter { it.points.contains("$y$x") }.size != 0
-    if (!exists && get(y)[x] != 9) {
-        points.add("$y$x")
-        if (y < size-1) expandOn(y+1,x, points)
-        if (x < get(y).size-1) expandOn(y,x+1, points)
+
+fun ArrayList<Int>.fillString(): String {
+    val filled = this.map {
+        if (it < 10) "0$it" else "$it"
     }
-}
-fun List<Basin>.merge(): List<Basin> {
-    val toDelete = ArrayList<Basin>()
-    for(i in 0..this.size-1) {
-        val basin = get(i)
-        val inner = i+1
-        for (j in inner..this.size-1) {
-            val next = get(j)
-            if (basin.adjacentTo(next)) {
-                basin.points.addAll(next.points)
-                toDelete.add(next)
-            }
-        }
-    }
-    return this.filter { !toDelete.contains(it) };
+    return filled.toString()
 }
 
-fun Basin.adjacentTo(other: Basin): Boolean = this.points.any { one ->
-    other.points.map { it.toList().map { it.digitToInt() } }.all { bList ->
-        val aList = one.toList().map { it.digitToInt() }
-        val y = Math.abs(aList[0]-bList[0])
-        val x = Math.abs(aList[1]-bList[1])
-        x <= 1 && y <= 1
-    }
-}
-
-class Basin(val points: ArrayList<String>, var size: Int = 0) {
-    override fun toString(): String {
-        return points.toString()
-    }
-}
-val basins = ArrayList<Basin>()
 val floor = ArrayList<List<Int>>()
 File("input/2021/day9").forEachLine { line ->
     floor.add(line.toList().map { it.digitToInt() })
 }
 
 val yMax = floor.size-1
+val basinMap = ArrayList<ArrayList<Int>>()
+var basinCount = 1
 floor.forEachIndexed {y, row ->
+    val basinRow = ArrayList<Int>()
     row.forEachIndexed { x, v ->
-        val basinPoints = ArrayList<String>()
-        floor.expandOn(y, x, basinPoints)
-        basins.add(Basin(basinPoints))
+        if (v == 9) {
+            basinCount++
+            basinRow.add(0)
+        }
+        else basinRow.add(basinCount)
+    }
+    basinCount++
+    basinMap.add(basinRow)
+}
+
+println()
+basinMap.forEach {
+    println("${it.fillString()}")
+}
+
+fun ArrayList<ArrayList<Int>>.neighbours(x: Int, y: Int): ArrayList<Int> {
+    val row = get(y)
+    val nList = ArrayList<Int>()
+    if (y == 0) {
+        if (x == 0) {
+            nList.add(this[y][x+1])
+        } else if (x == row.size -1) {
+            nList.add(this[y][x-1])
+        } else {
+            nList.add(this[y][x+1])
+            nList.add(this[y][x-1])
+        }
+        nList.add(this[y+1][x])
+    } else if (y == size-1) {
+        if (x == row.size-1) {
+            nList.add(this[y][x-1])
+        } else if (x == 0) {
+            nList.add(this[y][x+1])
+        } else {
+            nList.add(this[y][x+1])
+            nList.add(this[y][x-1])
+        }
+        nList.add(this[y-1][x])
+    } else {
+        if (x > 0 && x < row.size-1) {
+            nList.add(this[y][x+1])
+            nList.add(this[y][x-1])
+        } else if (x == 0) {
+            nList.add(this[y][x+1])
+        } else if (x == row.size-1) {
+            nList.add(this[y][x-1])
+        }
+        nList.add(this[y+1][x])
+        nList.add(this[y-1][x])
+    }
+    return nList
+}
+
+fun join() {
+    for (y in 1..basinMap.size-1) {
+        val row = basinMap[y]
+        val above = basinMap[y-1]
+        for (x in 0..row.size-1) {
+            if (above[x] > 0 && row[x] > 0) {
+                val current = above[x]
+                for (i in 0..row.size-1) {
+                    if (above[i] == current) above[i] = row[x]
+                }
+
+                /*
+                var s = x
+                while (above[s] != 0 && s > 0) {
+                    above[--s] = row[x]
+                }
+                s = x
+                while (above[s] != 0 && s < above.size-1) {
+                    above[++s] = row[x]
+                }
+                 */
+            }
+            println()
+            basinMap.forEach {
+                println("${it.fillString()}")
+            }
+        }
     }
 }
 
-val joined = basins.filter { !it.points.isEmpty() }.merge().sortedBy {
-    it.points.size
+join()
+
+println()
+basinMap.forEach {
+    println("${it.fillString()}")
 }
-println(joined)
-val max = joined.subList(joined.size-3, joined.size)
-println(max)
-println(max.map { it.points.size })
+val basinSizes = basinMap.flatMap { it }
+    .filter { it != 0 }
+    .groupBy { it }
+    .mapValues { it.value.size }
+    .map { it.value }
+    .sorted()
+val (a,b,c) = basinSizes.subList(basinSizes.size-3, basinSizes.size)
+println(a*b*c)
+

@@ -30,51 +30,30 @@ fun List<List<String>>.printGrid() = forEach {
 for (y in 0..yMax) {
     val row = ArrayList<String>()
     for (x in 0..xMax) {
-        if (points.any { it.first == x && it.second == y }) {
-            row.add("#")
-        } else row.add(".")
+        if (points.any { it.first == x && it.second == y }) row.add("#") else row.add(".")
     }
     grid.add(row)
 }
 
-fun fold(dim: String, value: Int) {
-    if (dim == "y") {
-        val top = grid.subList(0,value)
-        val bottom = grid.subList(value+1,grid.size).reversed()
-        val newGrid = top.mapIndexed { y, row ->
-            val addRow = bottom[y]
-            val mappedRow = row.mapIndexed { x, v ->
-                if (addRow[x] == "#" || v == "#") "#" else "."
-            }
-            val newRow = ArrayList<String>()
-            newRow.addAll(mappedRow)
-            newRow
-        }
-        grid.clear()
-        grid.addAll(newGrid)
-    } else if (dim == "x") {
-        val left = grid.map { row ->
-            row.subList(0,value)
-        }
-        val right = grid.map { row ->
-            row.subList(value+1,row.size).reversed()
-        }
-        val newGrid = left.mapIndexed { y, row ->
-            val addRow = right[y]
-            val mappedRow = row.mapIndexed { x, v ->
-                if (addRow[x] == "#" || v == "#") "#" else "."
-            }
-            val newRow = ArrayList<String>()
-            newRow.addAll(mappedRow)
-            newRow
-        }
-        grid.clear()
-        grid.addAll(newGrid)
-    }
+fun List<List<String>>.merge(other: List<List<String>>) = mapIndexed { y, row ->
+    val mappedRow = row.mapIndexed { x, v -> if (other[y][x] == "#" || v == "#") "#" else "." }
+    ArrayList<String>().apply { addAll(mappedRow) }
 }
 
-instructions.forEach {
-    fold(it.first, it.second)
+fun ArrayList<ArrayList<String>>.fold(dim: String, value: Int): ArrayList<ArrayList<String>> {
+    val newGrid = ArrayList<ArrayList<String>>()
+    if (dim == "y") {
+        val top = subList(0,value)
+        val bottom = subList(value+1,grid.size).reversed()
+        newGrid.addAll(top.merge(bottom))
+    } else if (dim == "x") {
+        val left = map { row -> row.subList(0,value) }
+        val right = map { row -> row.subList(value+1,row.size).reversed() }
+        newGrid.addAll(left.merge(right))
+    }
+    return newGrid
 }
+
+instructions.forEach { grid = grid.fold(it.first, it.second) }
 println()
 grid.printGrid()

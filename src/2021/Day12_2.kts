@@ -28,24 +28,47 @@ class UndirectedGraph {
 
         get(source).forEach { queue.add(listOf(source, it)) }
 
+        val addInPath: (List<String>, String) -> Unit = { frontElement, vertex ->
+            paths.add(mutableListOf<String>().also {
+                it.addAll(frontElement)
+                it.add(vertex)
+            })
+        }
+
+        val addInQueue: (List<String>, String) -> Unit = { frontElement, vertex ->
+            queue.add(mutableListOf<String>().also {
+                it.addAll(frontElement)
+                it.add(vertex)
+            })
+        }
+
         while (queue.isNotEmpty()) {
             val frontElement = queue.remove()
             get(frontElement.last()).forEach { vertex ->
                 if (vertex == destination) {
-                    paths.add(mutableListOf<String>().also {
-                        it.addAll(frontElement)
-                        it.add(vertex)
-                    })
+                    addInPath(frontElement, vertex)
                 } else {
-                    if (!(vertex[0].isLowerCase() && frontElement.contains(vertex))) {
-                        queue.add(mutableListOf<String>().also {
-                            it.addAll(frontElement)
-                            it.add(vertex)
-                        })
+                    if (vertex[0].isLowerCase()) {
+                        if (!frontElement.contains(vertex)) {
+                            addInQueue(frontElement, vertex)
+                        } else {
+                            frontElement.filter { it[0].isLowerCase() }
+                                .let { list ->
+                                    val (matching, others) = list.partition { it == vertex }
+                                    if (matching.count() == 1 &&
+                                        others.groupingBy { it }.eachCount().filter { it.value > 1 }.count() == 0
+                                    ) {
+                                        addInQueue(frontElement, vertex)
+                                    }
+                                }
+                        }
+                    } else {
+                        addInQueue(frontElement, vertex)
                     }
                 }
             }
         }
+
         return paths.size
     }
 }

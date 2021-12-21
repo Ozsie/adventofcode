@@ -1,55 +1,39 @@
 import java.io.File
 
-val rules = HashMap<String, String>()
-var switched = false
-var start = ""
-File("input/2021/day14").forEachLine { line ->
-    if (line.isEmpty()) {
-        switched = true
-    } else {
-        if (!switched) {
-            start = line
-        } else {
-            val (pair, insert) = line.split(" -> ")
-            rules.put(pair, insert)
+val inputs = File("input/2021/day14").readLines()
+
+val polymerTemplate = inputs[0]
+val pairInsertionMap = hashMapOf<String, String>()
+for (index in 2 until inputs.size) {
+    val (first, second) = inputs[index].split("->")
+    pairInsertionMap[first.trim()] = second.trim()
+}
+
+val polymerMap = mutableMapOf<String, Long>()
+for (index in 0 until polymerTemplate.length - 1) {
+    val pair = polymerTemplate.slice(index..index + 1)
+    polymerMap[pair] = polymerMap.getOrDefault(pair, 0) + 1
+}
+
+val steps = 40
+repeat(steps) {
+    val newPolymerMap = mutableMapOf<String, Long>()
+    for (polymer in polymerMap.keys) {
+        val itemToInsert = pairInsertionMap[polymer]
+        val (first, second) = polymer.mapIndexed { index, c ->
+            if (index == 0) "$c$itemToInsert"
+            else "$itemToInsert$c"
         }
+        newPolymerMap[first] = newPolymerMap.getOrDefault(first, 0) + polymerMap.getOrDefault(polymer,0)
+        newPolymerMap[second] = newPolymerMap.getOrDefault(second, 0) + polymerMap.getOrDefault(polymer,0)
     }
+    polymerMap.clear()
+    polymerMap.putAll(newPolymerMap)
 }
 
-var pairs = HashMap<String, Int>()
-for (i in 1..start.length-1) {
-    val pair = "${start[i-1]}${start[i]}"
-    val count = pairs.getOrDefault(pair, 0)
-    pairs.put(pair, count+1)
-}
-println()
-println(pairs)
-for (step in 1..1) {
-    val updated = HashMap<String, Int>()
-    pairs.forEach { pair, count ->
-        val insert = rules.get(pair)
-        val pairA = "${pair[0]}$insert"
-        val pairB = "$insert${pair[1]}"
-        val countA = pairs.getOrDefault(pairA, 0)
-        val countB = pairs.getOrDefault(pairB, 0)
-        if (countA == 0) updated.put(pairA, count)
-        else updated.put(pairA, countA+count)
-        if (countB == 0) updated.put(pairB, count)
-        else updated.put(pairB, countB+count)
-    }
-    pairs = updated
-}
-println(pairs.filter { it.key.contains('H') })
+val mapOfCharAndCount = mutableMapOf<Char, Long>()
+polymerMap.forEach { (key, value) -> mapOfCharAndCount[key[1]] = mapOfCharAndCount.getOrDefault(key[1], 0) + value }
+mapOfCharAndCount[polymerMap.keys.first()[0]] = mapOfCharAndCount.getOrDefault(polymerMap.keys.first()[0], 0) + polymerMap.values.first()
 
-val letters = pairs.keys.joinToString("") { it }.toSortedSet()
-println(letters)
-
-val letterCount = HashMap<Char, Int>()
-letters.forEach { c ->
-    letterCount.put(c, pairs.filter { it.key.contains(c) }.map { it.value }.sum())
-}
-println(letterCount)
-
-val max = letterCount.map { it.value }.maxOf { it }
-val min = letterCount.map { it.value }.minOf { it }
-println(max - min)
+val result = mapOfCharAndCount.values.maxOf { it } - mapOfCharAndCount.values.minOf { it }
+println(result)
